@@ -93,11 +93,16 @@ proc genParseProc(builder: var Builder): NimNode {.compileTime.} =
   shorts.add(handleShortOptions(builder))
   result = rep
 
-proc mkParser*(name: string, content: proc()): NimNode {.compileTime.} =
-  result = newStmtList()
-  builderstack.add(newBuilder(name))
-  content()
+macro mkParserMacro*(name: untyped, content: untyped): untyped =
+  builderstack.add(newBuilder(name.repr))
+  result = quote:
+    `content`
+    afterParser()
+  echo result.repr
 
+
+macro afterParser*: untyped =
+  result = newStmtList()
   var builder = builderstack.pop()
   
   # Generate help
@@ -123,12 +128,17 @@ proc mkParser*(name: string, content: proc()): NimNode {.compileTime.} =
     parser
   ))
 
-proc flag*(shortflag: string) {.compileTime.} =
+macro flagMacro*(shortflagNode: untyped): untyped =
+  let shortflag = shortflagNode.repr[1 .. ^2]
   var component = Component()
   component.kind = Flag
   component.shortflag = shortflag.strip(leading=true, chars={'-'})
   component.varname = shortflag.replace('-','_').strip(chars = {'_'})
   builderstack[^1].add(component)
 
+template flag*(shortflagNode: string): untyped =
+  flagMacro(shortflagNode)
 
+template mkParser*(name: string, content: untyped): untyped =
+  mkParserMacro(name, content)
 

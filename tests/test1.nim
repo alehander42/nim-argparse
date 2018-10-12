@@ -7,11 +7,15 @@ import parseopt
 
 suite "flags":
   test "simplest short option":
-    macro makeParser(): untyped =
-      mkParser("some name"):
-        flag("-a")
-        flag("-b")
-    var p = makeParser()
+    # amazing how it works
+    # he correct for flag function
+    #macro makeParser(): untyped =
+    #  mkParser("some name"):
+    #    flag("-a")
+    #    flag("-b")
+    var p = mkParser("some name"):
+      flag("-a")
+      flag("-b")
     
     echo "Help is: ", p.help
     check p.parse("-a").a == true
